@@ -349,6 +349,13 @@ namespace Ambrosia
                 {
                     if (inputPrefab.gameObject.GetComponent<LiquidContainer>().ContainedLiquid != null) { return false; }
                     return true;
+                },
+                postTransmutation: (NetworkPrefab inputPrefab, List<NetworkEntity> outputs) =>
+                {
+                    foreach (NetworkEntity networkEntity in outputs)
+                    {
+                        typeof(LiquidContainer).GetField("ContainedLiquid", BindingFlags.Instance | BindingFlags.Public).SetValue(networkEntity.gameObject.GetComponent<LiquidContainer>(), null);
+                    }
                 }
             );
 
@@ -371,6 +378,11 @@ namespace Ambrosia
                 {
                     outputs[1].hash = inputPrefab.gameObject.GetComponent<Mould>().Definition.Product.Prefab.Hash;
                     return outputs;
+                },
+                postTransmutation: (NetworkPrefab inputPrefab, List<NetworkEntity> outputs) =>
+                {
+                    typeof(Mould).GetField("usage", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(outputs[0].gameObject.GetComponent<Mould>(), inputPrefab.gameObject.GetComponent<Mould>().Usage);
+                    outputs[1].gameObject.GetComponent<PhysicalMaterialPart>().SetMaterial(PhysicalMaterial.All.Where(mat => mat.Hash == 1u).First());
                 }
             );
 
@@ -475,54 +487,54 @@ namespace Ambrosia
                 "Copper Ingot to Copper Ore Recipe",
                 17,
                 [
-                    new HashCount(00000u, 1)
+                    new HashCount(32850u, 1)
                 ],
                 [
-                    new HashCount(00000u, 3)
+                    new HashCount(2484u, 3)
                 ]
             );
 
             AmbrosiaRecipe.Create(
                 "Iron Ingot to Iron Ore Recipe",
-                17,
+                18,
                 [
-                    new HashCount(00000u, 1)
+                    new HashCount(23012u, 1)
                 ],
                 [
-                    new HashCount(00000u, 3)
+                    new HashCount(61652u, 3)
                 ]
             );
 
             AmbrosiaRecipe.Create(
                 "Gold Ingot to Gold Ore Recipe",
-                17,
+                19,
                 [
-                    new HashCount(00000u, 1)
+                    new HashCount(30092u, 1)
                 ],
                 [
-                    new HashCount(00000u, 3)
+                    new HashCount(61650u, 3)
                 ]
             );
 
             AmbrosiaRecipe.Create(
                 "Silver Ingot to Silver Ore Recipe",
-                17,
+                20,
                 [
-                    new HashCount(00000u, 1)
+                    new HashCount(23528u, 1)
                 ],
                 [
-                    new HashCount(00000u, 3)
+                    new HashCount(9586u, 3)
                 ]
             );
 
             AmbrosiaRecipe.Create(
                 "Mythril Ingot to Mythril Ore Recipe",
-                17,
+                21,
                 [
-                    new HashCount(00000u, 1)
+                    new HashCount(24774u, 1)
                 ],
                 [
-                    new HashCount(00000u, 3)
+                    new HashCount(11702u, 3)
                 ]
             );
         }
