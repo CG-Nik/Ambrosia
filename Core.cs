@@ -1,4 +1,5 @@
 ﻿using Alta;
+using Alta.Chunks;
 using Alta.Inventory;
 using Alta.Liquid;
 using Alta.Networking;
@@ -185,6 +186,9 @@ namespace Ambrosia
 
     public class Core : MelonMod
     {
+        private static MelonPreferences_Category melonPrefCategory;
+        private static MelonPreferences_Entry<bool> melonPrefEntry_InfiniteCrateHasSpawned;
+
         public static event Action PreSetUpAmbrosiaRecipes = () => { };
         public static event Action SetUpAmbrosiaRecipes = () => { };
         public static event Action PostSetUpAmbrosiaRecipes = () => { };
@@ -192,9 +196,16 @@ namespace Ambrosia
         public static List<uint> ambrosiaRecipeImmuneIdentifiers = [];
         public static List<uint> ambrosiaRecipeCurrentlyBeingInputIdentifiers = [];
 
+        internal static LibLiquid ambrosia;
+
         public override void OnInitializeMelon()
         {
             LoggerInstance.Msg("Initialized.");
+
+            melonPrefCategory = MelonPreferences.CreateCategory("Ambrosia");
+            melonPrefEntry_InfiniteCrateHasSpawned = melonPrefCategory.CreateEntry<bool>("DO_NOT_EDIT_THIS_infiniteCrateHasSpawned", false);
+            MelonPreferences.Save();
+
             ServerHandler.Initialized += ServerInitialized;
             CookingLib.Main.Setup += SetupLiquids;
             SetUpAmbrosiaRecipes += SetUpBaseAmbrosiaRecipes;
@@ -217,7 +228,7 @@ namespace Ambrosia
 
         private static void SetupLiquids()
         {
-            LibLiquid ambrosia = Liquids.RegisterShared(
+            ambrosia = Liquids.RegisterShared(
                 43670,
                 new LiquidSpec {
                     Id = "Ambrosia.Ambrosia",
@@ -243,6 +254,17 @@ namespace Ambrosia
                     ConsumeItem = true
                 }
             );
+
+            if (!melonPrefEntry_InfiniteCrateHasSpawned.Value)
+            {
+                NetworkEntity networkEntity = SpawnHelper.Spawn(23304u, SpawnData.DontGenerate, LocationChunkHelper.GetBestContaining(new Vector3(-1340.8f, 299.5f, 15.9f)), new Vector3(-1340.8f, 299.5f, 15.9f), Quaternion.Euler(new Vector3(0f, 30f, 0f)));
+                LiquidContainer liquidContainer = networkEntity.gameObject.GetComponent<LiquidContainer>();
+                LiquidContent liquidContent = ambrosia.Definition.GetAsLiquidContent();
+                ((ILiquidContainerInternal)liquidContainer).SetContent(liquidContent);
+
+                melonPrefEntry_InfiniteCrateHasSpawned.Value = true;
+                MelonPreferences.Save();
+            }
         }
 
         private void SetUpBaseAmbrosiaRecipes()
@@ -354,7 +376,7 @@ namespace Ambrosia
                 {
                     foreach (NetworkEntity networkEntity in outputs)
                     {
-                        typeof(LiquidContainer).GetField("ContainedLiquid", BindingFlags.Instance | BindingFlags.Public).SetValue(networkEntity.gameObject.GetComponent<LiquidContainer>(), null);
+                        networkEntity.gameObject.GetComponent<LiquidContainer>().ForceEmpty();
                     }
                 }
             );
