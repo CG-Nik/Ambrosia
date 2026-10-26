@@ -224,15 +224,14 @@ namespace Ambrosia
         {
             if (melonPrefEntry_ShouldSpawnInfiniteCrateOnNextBootup.Value)
             {
-                NetworkEntity networkEntity_concoctionCrate = SpawnHelper.Spawn(23304u, SpawnData.DontGenerate, LocationChunkHelper.GetBestContaining(new Vector3(-1340.8f, 299.5f, 15.9f)), new Vector3(-1340.8f, 299.5f, 15.9f));
-                /*
-                networkEntity_concoctionCrate.InitializationFinished += (NetworkEntity networkEntity) =>
-                {
-                    LiquidContainer liquidContainer = networkEntity.gameObject.GetComponent<LiquidContainer>();
-                    LiquidContent liquidContent = ambrosia.Definition.GetAsLiquidContent();
-                    typeof(LiquidContainer).GetProperty("ContainedLiquid", BindingFlags.Instance | BindingFlags.Public).SetValue(liquidContainer, liquidContent);
-                };
-                */
+                NetworkEntity networkEntity_concoctionCrate = SpawnHelper.Spawn(23304u, SpawnData.DontGenerate, LocationChunkHelper.GetBestContaining(new Vector3(-1340.8f, 299.5f, 15.9f)), new Vector3(-1340.8f, 299.5f, 15.9f),
+                    preChunking: (NetworkEntity networkEntity) =>
+                    {
+                        LiquidContainer liquidContainer = networkEntity.gameObject.GetComponent<LiquidContainer>();
+                        LiquidContent liquidContent = ambrosia.Definition.GetAsLiquidContent();
+                        typeof(LiquidContainer).GetProperty("ContainedLiquid", BindingFlags.Instance | BindingFlags.Public).SetValue(liquidContainer, liquidContent);
+                    }
+                );
 
                 melonPrefEntry_ShouldSpawnInfiniteCrateOnNextBootup.Value = false;
                 MelonPreferences.Save();
