@@ -129,6 +129,9 @@
 		<Reference Include="CrossGameplayApi">
 			<HintPath>$(GamePath)/A Township Tale_Data\Managed\CrossGameplayApi.dll</HintPath>
 		</Reference>
+		<Reference Include="DyeingAPI">
+		  <HintPath>D:\Games\A Township Tale Server\A Township Tale\Mods\DyeingAPI.dll</HintPath>
+		</Reference>
 		<Reference Include="EmbedIO">
 			<HintPath>$(GamePath)/A Township Tale_Data\Managed\EmbedIO.dll</HintPath>
 		</Reference>

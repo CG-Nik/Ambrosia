@@ -16,6 +16,15 @@ using UnityEngine;
 
 namespace Ambrosia
 {
+    using DyeingAPI;
+    internal class DyeingAPICrossmod
+    {
+        internal static void AddAmbrosiaToGlobalLiquidBlacklist()
+        {
+            DyeingAPI.DyeRecipe.globalLiquidBlacklist.Add(43670u);
+        }
+    }
+
     public class OnTriggerEnterPatch
     {
         internal static void Postfix(LiquidContainerTrigger __instance, Collider other)
@@ -276,6 +285,11 @@ namespace Ambrosia
                     ConsumeItem = true
                 }
             );
+
+            if (MelonBase.FindMelon("DyeingAPI", "CGNik") != null)
+            {
+                DyeingAPICrossmod.AddAmbrosiaToGlobalLiquidBlacklist();
+            }
         }
 
         private void SetUpBaseAmbrosiaRecipes()
