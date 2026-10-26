@@ -129,6 +129,9 @@ namespace Ambrosia
 
     public class AmbrosiaRecipe : HashedGeneralValue<AmbrosiaRecipe>
     {
+        /// <summary>
+        /// Initializes an AmbrosiaRecipe by setting its values and adding it to AmbrosiaRecipe.All.
+        /// </summary>
         public void Initialize(string name, int hash, List<HashCount> inputs, List<HashCount> outputs, Func<NetworkPrefab, bool> inputCondition, Func<NetworkPrefab, List<HashCount>, List<HashCount>> modifyOutputs, Action<NetworkPrefab, List<NetworkEntity>> postTransmutation)
         {
             this.name = name;
@@ -142,6 +145,17 @@ namespace Ambrosia
             this.Register();
         }
 
+        /// <summary>
+        /// Creates, initializes, and return an AmbrosiaRecipe.
+        /// </summary>
+        /// <param name="name">The name of the UnityObject of the AmbrosiaRecipe.</param>
+        /// <param name="hash">The hash of the AmbrosiaRecipe.</param>
+        /// <param name="inputs">List of HashCounts (Hash of a prefab, count of how many) that can serve as inputs. ANY of these inputs work for the recipe, you only need ONE of the HashCounts for the recipe to go through. Counts above 1 require the item to be in a Pouch to work.</param>
+        /// <param name="outputs">List of HashCounts (Hash of a prefab, count of how many) that will be output. ALL of these will be spawned. Counts above 1 will output as Pouches.</param>
+        /// <param name="inputCondition">A Func that returns a bool determining whether or not the recipe is valid (true means that it's valid), allowing you to filter inputs with more detail. Takes a NetworkPrefab (the input prefab). To easily handle Pouches, Core.GetPouchSlot() can be used.</param>
+        /// <param name="modifyOutputs">A Func that returns a List<HashCount> that will be used as the outputs for the recipe, allowing you to add more logic to how your recipes work. Takes a NetworkPrefab (the input prefab) and a List<HashCount> (the original outputs).</param>
+        /// <param name="postTransmutation">An Action that runs after a recipe has been done, allowing you to do things to the outputted prefabs. Takes a NetworkPrefab (the input prefab) and a List<NetworkEntity> (the list of outputted items).</param>
+        /// <returns>Returns the AmbrosiaRecipe that was created.</returns>
         public static AmbrosiaRecipe Create(string name, int hash, List<HashCount> inputs, List<HashCount> outputs, Func<NetworkPrefab, bool> inputCondition = null, Func<NetworkPrefab, List<HashCount>, List<HashCount>> modifyOutputs = null, Action<NetworkPrefab, List<NetworkEntity>> postTransmutation = null)
         {
             AmbrosiaRecipe ambrosiaRecipe = ScriptableObject.CreateInstance<AmbrosiaRecipe>();
@@ -294,8 +308,6 @@ namespace Ambrosia
 
         private void SetUpBaseAmbrosiaRecipes()
         {
-            // If you're looking here for examples, I should mention that, in a HashCount, only Items can have a "count" of more than 1, otherwise the prefab won't spawn
-            
             AmbrosiaRecipe.Create(
                 "Rope to Canvas Recipe",
                 1,
