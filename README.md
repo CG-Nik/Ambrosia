@@ -1,6 +1,6 @@
 # Ambrosia
 This mod adds a new Liquid that can transform items into other items.  
-This mod needs to be on both the Client and the Server to work properly.  
+This mod needs to be on both the Client and the Server to work properly, but mods that add AmbrosiaRecipes just need to be on the Server.  
 This mod requires that you have https://github.com/Nyx12012/CookingLib downloaded to work properly.  
 
 You can obtain Ambrosia in two ways, either by going to the infinite crate of it at the top of the mountain in Mountain Pass, or by placing a MRK Fuel Core into water.  
