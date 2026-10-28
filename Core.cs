@@ -16,6 +16,7 @@ using UnityEngine;
 
 namespace Ambrosia
 {
+    using Alta.Pages;
     using DyeingAPI;
     internal class DyeingAPICrossmod
     {
@@ -42,7 +43,7 @@ namespace Ambrosia
 
             uint prefabHash = networkPrefab_item.Hash;
             int prefabCount = 1;
-            
+
             if (networkPrefab_item.Hash == 38942u)
             {
                 DockArray dockArray = networkPrefab_item.gameObject.GetComponent<DockArray>();
@@ -65,7 +66,8 @@ namespace Ambrosia
                 try
                 {
                     outputs = ambrosiaRecipe.modifyOutputs.Invoke(networkPrefab_item, outputs);
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     MelonLogger.Msg($"Error in modifyOutputs for AmbrosiaRecipe with Hash {ambrosiaRecipe.Hash}: {ex}");
                 }
@@ -82,7 +84,8 @@ namespace Ambrosia
                     networkEntities_outputItems.Add(networkEntity_outputItem);
                     networkPrefab_item.gameObject.GetComponent<Pickup>().ReplaceWith(networkEntity_outputItem.CommonPickup);
                 }
-            } else
+            }
+            else
             {
                 foreach (HashCount output in outputs)
                 {
@@ -120,7 +123,7 @@ namespace Ambrosia
 
             if (networkPrefab_item == null) { return; }
 
-            if (Core.ambrosiaRecipeImmuneIdentifiers.Contains(networkPrefab_item.Entity.Identifier)) 
+            if (Core.ambrosiaRecipeImmuneIdentifiers.Contains(networkPrefab_item.Entity.Identifier))
             {
                 Core.ambrosiaRecipeImmuneIdentifiers.Remove(networkPrefab_item.Entity.Identifier);
             }
@@ -152,7 +155,7 @@ namespace Ambrosia
         /// <param name="hash">The hash of the AmbrosiaRecipe.</param>
         /// <param name="inputs">List of HashCounts (Hash of a prefab, count of how many) that can serve as inputs. ANY of these inputs work for the recipe, you only need ONE of the HashCounts for the recipe to go through. Counts above 1 require the item to be in a Pouch to work.</param>
         /// <param name="outputs">List of HashCounts (Hash of a prefab, count of how many) that will be output. ALL of these will be spawned. Counts above 1 will output as Pouches.</param>
-        /// <param name="inputCondition">A Func that returns a bool determining whether or not the recipe is valid (true means that it's valid), allowing you to filter inputs with more detail. Takes a NetworkPrefab (the input prefab). To easily handle Pouches, Core.GetPouchSlot() can be used.</param>
+        /// <param name="inputCondition">A Func that returns a bool determining whether or not the recipe is valid (true means that it's valid), allowing you to filter inputs with more detail. Takes a NetworkPrefab (the input prefab). To easily handle Pouches, Core.GetSlotInDockArray() can be used.</param>
         /// <param name="modifyOutputs">A Func that returns a List<HashCount> that will be used as the outputs for the recipe, allowing you to add more logic to how your recipes work. Takes a NetworkPrefab (the input prefab) and a List<HashCount> (the original outputs).</param>
         /// <param name="postTransmutation">An Action that runs after a recipe has been done, allowing you to do things to the outputted prefabs. Takes a NetworkPrefab (the input prefab) and a List<NetworkEntity> (the list of outputted items).</param>
         /// <returns>Returns the AmbrosiaRecipe that was created.</returns>
@@ -175,7 +178,7 @@ namespace Ambrosia
             {
                 foreach (HashCount input in ambrosiaRecipe.inputs)
                 {
-                    if (input.hash == hash && count == input.count)
+                    if ((input.hash == hash || input.acceptAnyHash) && (count == input.count || input.acceptAnyCount))
                     {
                         if (ambrosiaRecipe.inputCondition?.Invoke(inputPrefab) ?? true)
                         {
@@ -198,14 +201,18 @@ namespace Ambrosia
 
     public class HashCount
     {
-        public HashCount(uint hash, int count)
+        public HashCount(uint hash, int count, bool acceptAnyHash = false, bool acceptAnyCount = false)
         {
             this.hash = hash;
             this.count = count;
+            this.acceptAnyHash = acceptAnyHash;
+            this.acceptAnyCount = acceptAnyCount;
         }
 
         public uint hash;
         public int count;
+        public bool acceptAnyHash = false;
+        public bool acceptAnyCount = false;
     }
 
     public class Core : MelonMod
@@ -252,7 +259,7 @@ namespace Ambrosia
                     {
                         LiquidContainer liquidContainer = networkEntity.gameObject.GetComponent<LiquidContainer>();
                         LiquidContent liquidContent = ambrosia.Definition.GetAsLiquidContent();
-                        typeof(LiquidContainer).GetProperty("ContainedLiquid", BindingFlags.Instance | BindingFlags.Public).SetValue(liquidContainer, liquidContent);
+                        ((ILiquidContainerInternal)liquidContainer).SetContent(liquidContent);
                     }
                 );
 
@@ -275,11 +282,12 @@ namespace Ambrosia
         {
             ambrosia = Liquids.RegisterShared(
                 43670,
-                new LiquidSpec {
+                new LiquidSpec
+                {
                     Id = "Ambrosia.Ambrosia",
                     Name = "Ambrosia",
                     Look = "Teleport Liquid Visual Data",
-                    Color = new Color(0.7f,0.3f,0f),
+                    Color = new Color(0.7f, 0.3f, 0f),
                     Effects = {
                         new EffectSpec { Effect = "Heal", Strength = 0.5f, OverSeconds = 0 },
                         new EffectSpec { Effect = "Heal", Strength = 0.5f, OverSeconds = 10 },
@@ -341,7 +349,7 @@ namespace Ambrosia
                 ],
                 inputCondition: (NetworkPrefab inputPrefab) =>
                 {
-                    if (GetPouchSlot(inputPrefab).DockedPickup.gameObject.GetComponent<PhysicalMaterialPart>().PhysicalMaterial.Hash == 10962u) { return true; }
+                    if (GetSlotInDockArray(inputPrefab.gameObject.GetComponent<DockArray>(), 0).DockedPickup.gameObject.GetComponent<PhysicalMaterialPart>().PhysicalMaterial.Hash == 10962u) { return true; }
                     return false;
                 }
             );
@@ -480,7 +488,7 @@ namespace Ambrosia
                 "Katana Blade to Katana Handle Recipe",
                 11,
                 [
-                    new HashCount(17174u, 1)
+                    new HashCount(17266u, 1)
                 ],
                 [
                     new HashCount(53200u, 1)
@@ -494,7 +502,7 @@ namespace Ambrosia
                     new HashCount(53200u, 1)
                 ],
                 [
-                    new HashCount(17174u, 1)
+                    new HashCount(17266u, 1)
                 ]
             );
 
@@ -502,7 +510,7 @@ namespace Ambrosia
                 "Naginata Blade to Naginata Handle Recipe",
                 13,
                 [
-                    new HashCount(15124u, 1)
+                    new HashCount(17420u, 1)
                 ],
                 [
                     new HashCount(24220u, 1)
@@ -516,7 +524,7 @@ namespace Ambrosia
                     new HashCount(24220u, 1)
                 ],
                 [
-                    new HashCount(15124u, 1)
+                    new HashCount(17420u, 1)
                 ]
             );
 
@@ -524,7 +532,7 @@ namespace Ambrosia
                 "Wakizashi Blade to Wakizashi Handle Recipe",
                 15,
                 [
-                    new HashCount(48902u, 1)
+                    new HashCount(9018u, 1)
                 ],
                 [
                     new HashCount(47662u, 1)
@@ -538,7 +546,7 @@ namespace Ambrosia
                     new HashCount(47662u, 1)
                 ],
                 [
-                    new HashCount(48902u, 1)
+                    new HashCount(9018u, 1)
                 ]
             );
 
@@ -596,12 +604,221 @@ namespace Ambrosia
                     new HashCount(11702u, 3)
                 ]
             );
+
+            AmbrosiaRecipe.Create(
+                "Leather Rolls to Big Leather Recipe",
+                22,
+                [
+                    new HashCount(47760u, 15),
+                ],
+                [
+                    new HashCount(23206u, 1)
+                ],
+                postTransmutation: (NetworkPrefab inputPrefab, List<NetworkEntity> outputs) =>
+                {
+                    outputs[0].gameObject.GetComponent<PhysicalMaterialPart>().SetMaterial(GetSlotInDockArray(inputPrefab.gameObject.GetComponent<DockArray>(), 0).DockedPickup.gameObject.GetComponent<PhysicalMaterialPart>().PhysicalMaterial);
+                }
+            );
+
+            AmbrosiaRecipe.Create(
+                "Leather Strips to Leather Roll Recipe",
+                23,
+                [
+                    new HashCount(63204u, 3),
+                ],
+                [
+                    new HashCount(47760u, 1)
+                ],
+                postTransmutation: (NetworkPrefab inputPrefab, List<NetworkEntity> outputs) =>
+                {
+                    outputs[0].gameObject.GetComponent<PhysicalMaterialPart>().SetMaterial(GetSlotInDockArray(inputPrefab.gameObject.GetComponent<DockArray>(), 0).DockedPickup.gameObject.GetComponent<PhysicalMaterialPart>().PhysicalMaterial);
+                }
+            );
+
+            AmbrosiaRecipe.Create(
+                "Lantern to Flashlight Lantern Recipe",
+                24,
+                [
+                    new HashCount(41760u, 1)
+                ],
+                [
+                    new HashCount(23642u, 1)
+                ],
+                inputCondition: (NetworkPrefab inputPrefab) =>
+                {
+                    if (GetSlotInDockArray(inputPrefab.gameObject.GetComponent<DockArray>(), 0).HasDockedPickup) { return false; }
+                    return true;
+                }
+            );
+
+            AmbrosiaRecipe.Create(
+                "Flashlight Lantern to Lantern Recipe",
+                25,
+                [
+                    new HashCount(23642u, 1)
+                ],
+                [
+                    new HashCount(41760u, 1)
+                ],
+                inputCondition: (NetworkPrefab inputPrefab) =>
+                {
+                    if (GetSlotInDockArray(inputPrefab.gameObject.GetComponent<DockArray>(), 0).HasDockedPickup) { return false; }
+                    return true;
+                }
+            );
+
+            AmbrosiaRecipe.Create(
+                "Iron Ore to Copper Ore Recipe",
+                26,
+                [
+                    new HashCount(61652u, 1)
+                ],
+                [
+                    new HashCount(2484u, 1)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "Gold Ore to Iron Ore Recipe",
+                27,
+                [
+                    new HashCount(61650u, 1)
+                ],
+                [
+                    new HashCount(61652u, 1)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "Silver Ore to Gold Ore Recipe",
+                28,
+                [
+                    new HashCount(9586u, 1)
+                ],
+                [
+                    new HashCount(61650u, 1)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "Mythril Ore to Silver Ore Recipe",
+                29,
+                [
+                    new HashCount(11702u, 1)
+                ],
+                [
+                    new HashCount(9586u, 1)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "Carsi Ingot Decraft Recipe",
+                30,
+                [
+                    new HashCount(60868u, 1)
+                ],
+                [
+                    new HashCount(9586u, 4),
+                    new HashCount(31034u, 1)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "Evinon Steel Ingot Decraft Recipe",
+                31,
+                [
+                    new HashCount(32198u, 1)
+                ],
+                [
+                    new HashCount(24774u, 2),
+                    new HashCount(23528u, 1)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "Orchi Ingot Decraft Recipe",
+                32,
+                [
+                    new HashCount(16464u, 1)
+                ],
+                [
+                    new HashCount(61650u, 3),
+                    new HashCount(11702u, 2)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "Red Iron Ingot Decraft Recipe",
+                33,
+                [
+                    new HashCount(31034u, 1)
+                ],
+                [
+                    new HashCount(23012u, 1),
+                    new HashCount(32850u, 1)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "White Gold Ingot Decraft Recipe",
+                34,
+                [
+                    new HashCount(13158u, 1)
+                ],
+                [
+                    new HashCount(9586u, 3),
+                    new HashCount(61650u, 2)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "Fireworks to Explosive Shard Recipe",
+                35,
+                [
+                    new HashCount(40748u, 2)
+                ],
+                [
+                    new HashCount(50412u, 1)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "Explosive Shards to Dynamite Recipe",
+                36,
+                [
+                    new HashCount(50412u, 2)
+                ],
+                [
+                    new HashCount(31326u, 1)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "Dynamite to Fireworks Recipe",
+                37,
+                [
+                    new HashCount(31326u, 1)
+                ],
+                [
+                    new HashCount(40748u, 4)
+                ]
+            );
+
+            AmbrosiaRecipe.Create(
+                "Firework to Firework Recipe",
+                38,
+                [
+                    new HashCount(40748u, 1)
+                ],
+                [
+                    new HashCount(40748u, 1)
+                ]
+            );
         }
 
-        public static PickupDock GetPouchSlot(NetworkPrefab pouchPrefab)
+        public static PickupDock GetSlotInDockArray(DockArray dockArray, int index)
         {
-            DockArray dockArray = pouchPrefab.gameObject.GetComponent<DockArray>();
-            return ((List<PickupDock>)typeof(DockArray).GetField("docks", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(dockArray))[0];
+            return ((List<PickupDock>)typeof(DockArray).GetField("docks", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(dockArray))[index];
         }
     }
 }
