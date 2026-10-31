@@ -13,10 +13,10 @@ using UnityEngine;
 
 [assembly: MelonInfo(typeof(Ambrosia.Core), "Ambrosia", "1.0.0", "CGNik", null)]
 [assembly: MelonGame("Alta", "A Township Tale")]
+[assembly: MelonOptionalDependencies(["DyeingAPI"])]
 
 namespace Ambrosia
 {
-    using Alta.Pages;
     using DyeingAPI;
     internal class DyeingAPICrossmod
     {
