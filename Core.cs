@@ -269,13 +269,32 @@ namespace Ambrosia
             }
         }
 
+        private static void InvokeEach(Action action, string eventName)
+        {
+            if (action == null)
+                return;
+
+            foreach (Action subscriber in action.GetInvocationList())
+            {
+                try
+                {
+                    subscriber();
+                }
+                catch (Exception ex)
+                {
+                    MelonLogger.Error($"{eventName} subscriber {subscriber.Method.DeclaringType?.FullName}.{subscriber.Method.Name} from {subscriber.Method.DeclaringType?.Assembly.GetName().Name} failed, continuing with the others");
+                    MelonLogger.Error(ex);
+                }
+            }
+        }
+
         public override void OnLateInitializeMelon()
         {
-            PreSetUpAmbrosiaRecipes.Invoke();
+            InvokeEach(PreSetUpAmbrosiaRecipes, nameof(PreSetUpAmbrosiaRecipes));
 
-            SetUpAmbrosiaRecipes.Invoke();
+            InvokeEach(SetUpAmbrosiaRecipes, nameof(SetUpAmbrosiaRecipes));
 
-            PostSetUpAmbrosiaRecipes.Invoke();
+            InvokeEach(PostSetUpAmbrosiaRecipes, nameof(PostSetUpAmbrosiaRecipes));
         }
 
         private static void SetupLiquids()
@@ -675,7 +694,22 @@ namespace Ambrosia
                 ],
                 [
                     new HashCount(2484u, 1)
-                ]
+                ],
+                modifyOutputs: (NetworkPrefab inputPrefab, List<HashCount> outputs) =>
+                {
+                    System.Random rng = new System.Random();
+                    if (rng.NextFloat() <= 0.01f)
+                    {
+                        foreach (HashCount output in outputs) { output.count *= 3; }
+                        return outputs;
+                    }
+                    if (rng.NextFloat() <= 0.2f)
+                    {
+                        foreach (HashCount output in outputs) { output.count += 1; }
+                        return outputs;
+                    }
+                    return outputs;
+                }
             );
 
             AmbrosiaRecipe.Create(
@@ -686,7 +720,22 @@ namespace Ambrosia
                 ],
                 [
                     new HashCount(61652u, 1)
-                ]
+                ],
+                modifyOutputs: (NetworkPrefab inputPrefab, List<HashCount> outputs) =>
+                {
+                    System.Random rng = new System.Random();
+                    if (rng.NextFloat() <= 0.01f)
+                    {
+                        foreach (HashCount output in outputs) { output.count *= 3; }
+                        return outputs;
+                    }
+                    if (rng.NextFloat() <= 0.2f)
+                    {
+                        foreach (HashCount output in outputs) { output.count += 1; }
+                        return outputs;
+                    }
+                    return outputs;
+                }
             );
 
             AmbrosiaRecipe.Create(
@@ -697,7 +746,22 @@ namespace Ambrosia
                 ],
                 [
                     new HashCount(61650u, 1)
-                ]
+                ],
+                modifyOutputs: (NetworkPrefab inputPrefab, List<HashCount> outputs) =>
+                {
+                    System.Random rng = new System.Random();
+                    if (rng.NextFloat() <= 0.01f)
+                    {
+                        foreach (HashCount output in outputs) { output.count *= 3; }
+                        return outputs;
+                    }
+                    if (rng.NextFloat() <= 0.2f)
+                    {
+                        foreach (HashCount output in outputs) { output.count += 1; }
+                        return outputs;
+                    }
+                    return outputs;
+                }
             );
 
             AmbrosiaRecipe.Create(
@@ -708,7 +772,22 @@ namespace Ambrosia
                 ],
                 [
                     new HashCount(9586u, 1)
-                ]
+                ],
+                modifyOutputs: (NetworkPrefab inputPrefab, List<HashCount> outputs) =>
+                {
+                    System.Random rng = new System.Random();
+                    if (rng.NextFloat() <= 0.01f)
+                    {
+                        foreach (HashCount output in outputs) { output.count *= 3; }
+                        return outputs;
+                    }
+                    if (rng.NextFloat() <= 0.2f)
+                    {
+                        foreach (HashCount output in outputs) { output.count += 1; }
+                        return outputs;
+                    }
+                    return outputs;
+                }
             );
 
             AmbrosiaRecipe.Create(
