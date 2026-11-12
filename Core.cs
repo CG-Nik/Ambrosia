@@ -10,6 +10,7 @@ using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
+using FixtureLib;
 
 [assembly: MelonInfo(typeof(Ambrosia.Core), "Ambrosia", "1.0.0", "CGNik", null)]
 [assembly: MelonGame("Alta", "A Township Tale")]
@@ -217,9 +218,6 @@ namespace Ambrosia
 
     public class Core : MelonMod
     {
-        private static MelonPreferences_Category melonPrefCategory;
-        private static MelonPreferences_Entry<bool> melonPrefEntry_ShouldSpawnInfiniteCrateOnNextBootup;
-
         public static event Action PreSetUpAmbrosiaRecipes = () => { };
         public static event Action SetUpAmbrosiaRecipes = () => { };
         public static event Action PostSetUpAmbrosiaRecipes = () => { };
@@ -233,9 +231,7 @@ namespace Ambrosia
         {
             LoggerInstance.Msg("Initialized.");
 
-            melonPrefCategory = MelonPreferences.CreateCategory("Ambrosia");
-            melonPrefEntry_ShouldSpawnInfiniteCrateOnNextBootup = melonPrefCategory.CreateEntry<bool>("shouldSpawnInfiniteCrateOnNextBootup", true);
-            MelonPreferences.Save();
+            FixtureLib.Fixtures.AddResources(typeof(Core).Assembly, "Ambrosia");
 
             ServerHandler.Initialized += ServerInitialized;
             CookingLib.Main.Setup += SetupLiquids;
@@ -246,27 +242,6 @@ namespace Ambrosia
         {
             HarmonyInstance.Patch(AccessTools.Method(typeof(LiquidContainerTrigger), "OnTriggerEnter"), postfix: new HarmonyMethod(typeof(OnTriggerEnterPatch), nameof(OnTriggerEnterPatch.Postfix)));
             HarmonyInstance.Patch(AccessTools.Method(typeof(LiquidContainerTrigger), "OnTriggerExit"), postfix: new HarmonyMethod(typeof(OnTriggerExitPatch), nameof(OnTriggerExitPatch.Postfix)));
-
-            serverHandler.BootupFinished += BootupFinished;
-        }
-
-        private void BootupFinished()
-        {
-            if (melonPrefEntry_ShouldSpawnInfiniteCrateOnNextBootup.Value)
-            {
-                NetworkEntity networkEntity_concoctionCrate = SpawnHelper.Spawn(23304u, SpawnData.DontGenerate, LocationChunkHelper.GetBestContaining(new Vector3(-1340.8f, 299.5f, 15.9f)), new Vector3(-1340.8f, 299.5f, 15.9f),
-                    preChunking: (NetworkEntity networkEntity) =>
-                    {
-                        LiquidContainer liquidContainer = networkEntity.gameObject.GetComponent<LiquidContainer>();
-                        LiquidContent liquidContent = ambrosia.Definition.GetAsLiquidContent();
-                        ((ILiquidContainerInternal)liquidContainer).SetContent(liquidContent);
-                    }
-                );
-
-                melonPrefEntry_ShouldSpawnInfiniteCrateOnNextBootup.Value = false;
-                MelonPreferences.Save();
-                typeof(SavingCommandModule).GetMethod("Save", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
-            }
         }
 
         private static void InvokeEach(Action action, string eventName)

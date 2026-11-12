@@ -13,6 +13,11 @@
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="Fixtures\ambrosiaCrate.fixture" />
+	  <None Remove="Fixtures\canvasSquare.fixture" />
+	  <None Remove="Fixtures\ropeClump.fixture" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Reference Include="Accessibility">
@@ -137,6 +142,9 @@
 		</Reference>
 		<Reference Include="Facebook.Wit.Dictation">
 			<HintPath>$(GamePath)/A Township Tale_Data\Managed\Facebook.Wit.Dictation.dll</HintPath>
+		</Reference>
+		<Reference Include="FixtureLib">
+		  <HintPath>D:\Games\A Township Tale Server\A Township Tale\Mods\FixtureLib.dll</HintPath>
 		</Reference>
 		<Reference Include="Fleck">
 			<HintPath>$(GamePath)/A Township Tale_Data\Managed\Fleck.dll</HintPath>
@@ -674,6 +682,12 @@
 	<ItemGroup>
 		<Compile Include="Core.cs" />
 		<Content Include="Directory.Build.props" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Fixtures\ambrosiaCrate.fixture" />
+	  <EmbeddedResource Include="Fixtures\canvasSquare.fixture" />
+	  <EmbeddedResource Include="Fixtures\ropeClump.fixture" />
 	</ItemGroup>
 	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
